@@ -5,11 +5,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include "dictionary.h"
 
 // Represents number of buckets in a hash table
-#define N 26
+#define N 10000
 
 // Represents a node in a hash table
 typedef struct node
@@ -22,9 +23,31 @@ node;
 // Represents a hash table
 node *hashtable[N];
 
-// Hashes word to a number between 0 and 25, inclusive, based on its first letter
-unsigned int hash(const char *word) {
-    return tolower(word[0]) - 'a';
+unsigned int hash(char *str)
+{
+   unsigned long hash = 5381;
+   int c;
+   while ((c = *str++)) {
+       hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+   }
+   return hash % N;
+}
+
+void lower_string(char *word) {
+    for (int i = 0; i < strlen(word); i++) {
+        word[i] = tolower(word[i]);
+    }
+}
+
+bool string_compare(char *word1, char *word2) {
+    for (int i = 0; ; i++) {
+        if (tolower(word1[i]) != tolower(word2[i])) {
+        // if (word1[i] != word2[i]) {
+            return false;
+        } else if (word1[i] == '\0') {
+            return true;
+        }
+    }
 }
 
 // Loads dictionary into memory, returning true if successful else false
@@ -84,12 +107,12 @@ unsigned int size(void) {
 }
 
 // Returns true if word is in dictionary else false
-bool check(const char *word) {
-    for (int i = 0; i < N; i++) {
-        for (node *ptr = hashtable[i]; ptr != NULL; ptr = ptr->next) {
-            if (strcmp(ptr->word, word)) {
-                return true;
-            }
+bool check(char *word) {
+    lower_string(word);
+    int i = hash(word);
+    for (node *ptr = hashtable[i]; ptr; ptr = ptr->next) {
+        if (string_compare(ptr->word, word)) {
+            return true;
         }
     }
     return false;
